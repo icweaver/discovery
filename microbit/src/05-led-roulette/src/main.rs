@@ -3,15 +3,46 @@
 #![no_std]
 
 use cortex_m_rt::entry;
+//use rtt_target::{rtt_init_print, rprintln};
+//use panic_rtt_target as _;
 use panic_halt as _;
-use microbit as _;
+use microbit::{
+    board::Board,
+    display::blocking::Display,
+    hal::{prelude::*, Timer},
+};
 
 #[entry]
 fn main() -> ! {
-    let _y;
-    let x = 42;
-    _y = x;
+    //rtt_init_print!();
 
-    // infinite loop; just so we don't leave this stack frame
-    loop {}
+    let board = Board::take().unwrap();
+    let mut timer = Timer::new(board.TIMER0);
+    let mut display = Display::new(board.display_pins);
+
+    let mut grid = [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ];
+
+    fn update_grid(leds: &mut [[u8; 5]; 5]) {
+        if leds[0][0] == 0 {
+            leds[0][0] = 1;
+        } else if leds[0][0] == 1 {
+            leds[0][0] = 0;
+            leds[0][1] = 1;
+        } else if leds[0][1] == 1 {
+            leds[0][1] = 0;
+            leds[0][0] = 1;
+        }
+    }
+
+    loop {
+        display.show(&mut timer, grid, 2000);
+        update_grid(&mut grid);
+        //timer.delay_ms(2000_u32);
+    }
 }
