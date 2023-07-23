@@ -22,9 +22,11 @@ fn main() -> ! {
 
     let mut u = [0, 0];
     let mut v = [1, 0];
-    let mut light_seq = vec![u];
+    let mut light_seq = [
+        (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
+    ];
 
-    stroke(&mut light_seq, &mut u, v, 4);
+    //stroke(&mut light_seq, &mut u, v, 4);
 
     let mut grid = [
         [0, 0, 0, 0, 0],
@@ -36,10 +38,12 @@ fn main() -> ! {
 
     loop {
         for seq in light_seq {
-            (x, y) = seq;
+            let (x, y) = seq;
             grid[x][y] = 1;
-            display.show(&mut timer, grid, 2000);
+            display.show(&mut timer, grid, 250);
         }
+        //display.clear();
+        timer.delay_ms(1000_u32);
     }
 }
 
@@ -50,7 +54,7 @@ fn main() -> ! {
 //    n: isize,
 //) {
 //    for _ in 1..=n {
-//        // Note: x and y are swapped in the matrix -> nested vector mental model
+//        // Note: x and y are swapped in the matrix -> nested array mental model
 //        u[0] += v[1];
 //        u[1] += v[0];
 //        light_seq.push(*u);
