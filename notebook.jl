@@ -34,6 +34,50 @@ cm"""
 		```
 """
 
+# ╔═╡ e972e040-9500-46b4-8d20-62c078175535
+md"""
+## LED Roulette
+"""
+
+# ╔═╡ 9a0c0829-daf4-4aa4-b316-c8b977588fe8
+grid = [
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0],
+];
+
+# ╔═╡ b2e053f6-a4b2-40dc-a913-92f270041822
+function stroke(u_old, v_old, n)
+	strokes = [u_old]
+	u_new = u_old
+	for _ in 1:n
+		u_new = u_old .+ v_old
+		u_old = u_new
+		push!(strokes, u_new)
+	end
+	strokes
+end
+
+# ╔═╡ f1d5a319-5bc9-4baf-993d-44a1cbb87503
+light_seq = let
+	u_current = [1, 1]
+	v_current = [0, 1]
+	seq = []
+	push!(seq, stroke(u_current, v_current, 4))
+	Iterators.flatten(seq) |> collect
+end
+
+# ╔═╡ 1e477364-9e30-4c1f-afb6-842cfeb0da70
+for coord in light_seq
+	x, y = coord
+	grid[x][y] = 1
+end
+
+# ╔═╡ 18bb1194-28aa-4854-914e-f9d6b8e00d7c
+grid
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -130,6 +174,12 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 # ╟─5b05d83e-2447-11ee-34c5-256dfa9239f3
 # ╟─856b27c6-15ac-48cf-ad0a-fe2a80901283
 # ╟─42bc0817-3578-46b1-a990-621a2f71afc4
+# ╟─e972e040-9500-46b4-8d20-62c078175535
+# ╠═9a0c0829-daf4-4aa4-b316-c8b977588fe8
+# ╠═f1d5a319-5bc9-4baf-993d-44a1cbb87503
+# ╠═b2e053f6-a4b2-40dc-a913-92f270041822
+# ╠═1e477364-9e30-4c1f-afb6-842cfeb0da70
+# ╠═18bb1194-28aa-4854-914e-f9d6b8e00d7c
 # ╠═343100ae-ab5a-4af6-9368-251f8a557ae3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

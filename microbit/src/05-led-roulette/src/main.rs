@@ -20,6 +20,12 @@ fn main() -> ! {
     let mut timer = Timer::new(board.TIMER0);
     let mut display = Display::new(board.display_pins);
 
+    let mut u = [0, 0];
+    let mut v = [1, 0];
+    let mut light_seq = vec![u];
+
+    stroke(&mut light_seq, &mut u, v, 4);
+
     let mut grid = [
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
@@ -28,21 +34,25 @@ fn main() -> ! {
         [0, 0, 0, 0, 0],
     ];
 
-    fn update_grid(leds: &mut [[u8; 5]; 5]) {
-        if leds[0][0] == 0 {
-            leds[0][0] = 1;
-        } else if leds[0][0] == 1 {
-            leds[0][0] = 0;
-            leds[0][1] = 1;
-        } else if leds[0][1] == 1 {
-            leds[0][1] = 0;
-            leds[0][0] = 1;
+    loop {
+        for seq in light_seq {
+            (x, y) = seq;
+            grid[x][y] = 1;
+            display.show(&mut timer, grid, 2000);
         }
     }
-
-    loop {
-        display.show(&mut timer, grid, 2000);
-        update_grid(&mut grid);
-        //timer.delay_ms(2000_u32);
-    }
 }
+
+//fn stroke(
+//    light_seq: &mut Vec<[isize; 2]>,
+//    u: &mut [isize; 2],
+//    v: [isize; 2],
+//    n: isize,
+//) {
+//    for _ in 1..=n {
+//        // Note: x and y are swapped in the matrix -> nested vector mental model
+//        u[0] += v[1];
+//        u[1] += v[0];
+//        light_seq.push(*u);
+//    }
+//}
