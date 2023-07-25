@@ -3,30 +3,25 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-//use rtt_target::{rtt_init_print, rprintln};
-//use panic_rtt_target as _;
 use panic_halt as _;
 use microbit::{
     board::Board,
     display::blocking::Display,
-    hal::{prelude::*, Timer},
+    hal::{Timer},
 };
 
 #[entry]
 fn main() -> ! {
-    //rtt_init_print!();
-
     let board = Board::take().unwrap();
     let mut timer = Timer::new(board.TIMER0);
     let mut display = Display::new(board.display_pins);
 
-    let mut u = [0, 0];
-    let mut v = [1, 0];
-    let mut light_seq = [
+    const LIGHT_SEQ: [(usize, usize); 17] = [
         (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
+        (1, 4), (2, 4), (3, 4), (4, 4),
+        (4, 3), (4, 2), (4, 1), (4, 0),
+        (4, 0), (3, 0), (2, 0), (1, 0),
     ];
-
-    //stroke(&mut light_seq, &mut u, v, 4);
 
     let mut grid = [
         [0, 0, 0, 0, 0],
@@ -36,27 +31,13 @@ fn main() -> ! {
         [0, 0, 0, 0, 0],
     ];
 
+    let mut u_old = (0, 0);
     loop {
-        for seq in light_seq {
-            let (x, y) = seq;
-            grid[x][y] = 1;
-            display.show(&mut timer, grid, 250);
+        for u_new in LIGHT_SEQ {
+            grid[u_old.0][u_old.1] = 0;
+            grid[u_new.0][u_new.1] = 1;
+            display.show(&mut timer, grid, 40);
+            u_old = u_new;
         }
-        //display.clear();
-        timer.delay_ms(1000_u32);
     }
 }
-
-//fn stroke(
-//    light_seq: &mut Vec<[isize; 2]>,
-//    u: &mut [isize; 2],
-//    v: [isize; 2],
-//    n: isize,
-//) {
-//    for _ in 1..=n {
-//        // Note: x and y are swapped in the matrix -> nested array mental model
-//        u[0] += v[1];
-//        u[1] += v[0];
-//        light_seq.push(*u);
-//    }
-//}

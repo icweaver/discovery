@@ -14,15 +14,25 @@ use microbit::{
     pac::twi0::frequency::FREQUENCY_A,
 };
 
+// I2C compatible interface
+// the microbit chip does not have an I2C, so we use this workaround
 #[cfg(feature = "v2")]
 use microbit::{
     hal::twim,
     pac::twim0::frequency::FREQUENCY_A,
 };
 
+use lsm303agr::{
+    AccelOutputDataRate, Lsm303agr,
+};
+
+// Section 6.1.1 I2C operation - Page 39
+// Target addresses
 const ACCELEROMETER_ADDR: u8 = 0b0011001;
 const MAGNETOMETER_ADDR: u8 = 0b0011110;
 
+// Section 7 Register mapping - Page 43, Table 26
+// WHO_AM_I identification registers
 const ACCELEROMETER_ID_REG: u8 = 0x0f;
 const MAGNETOMETER_ID_REG: u8 = 0x4f;
 
@@ -33,20 +43,19 @@ fn main() -> ! {
 
 
     #[cfg(feature = "v1")]
-    let mut i2c = { twi::Twi::new(board.TWI0, board.i2c.into(), FREQUENCY_A::K100) };
+    let i2c = { twi::Twi::new(board.TWI0, board.i2c.into(), FREQUENCY_A::K100) };
 
     #[cfg(feature = "v2")]
-    let mut i2c = { twim::Twim::new(board.TWIM0, board.i2c_internal.into(), FREQUENCY_A::K100) };
+    let i2c = { twim::Twim::new(board.TWIM0, board.i2c_internal.into(), FREQUENCY_A::K100) };
 
-    let mut acc = [0];
-    let mut mag = [0];
+    let mut sensor = Lsm303agr::new_with_i2c(i2c);
+    sensor.init().unwrap();
+    sensor.set_accel_odr(AccelOutputDataRate::Hz50).unwrap();
 
-    // First write the address + register onto the bus, then read the chip's responses
-    i2c.write_read(ACCELEROMETER_ADDR, &[ACCELEROMETER_ID_REG], &mut acc).unwrap();
-    i2c.write_read(MAGNETOMETER_ADDR, &[MAGNETOMETER_ID_REG], &mut mag).unwrap();
-
-    rprintln!("The accelerometer chip's id is: {:#b}", acc[0]);
-    rprintln!("The magnetometer chip's id is: {:#b}", mag[0]);
-
-    loop {}
+    loop {
+        if sensor.accel_status().unwrap().xyz_new_data {
+            let data = sensor.accel_data().unwrap();
+            rprintln!("Acceleration: x {} y {} z {}", data.x, data.y, data.z);
+        }
+    }
 }

@@ -2,7 +2,9 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-use rtt_target::rtt_init_print;
+use core::fmt::Write;
+use heapless::Vec;
+use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
 
 #[cfg(feature = "v1")]
@@ -50,8 +52,27 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
-    nb::block!(serial.write(b'X')).unwrap();
-    nb::block!(serial.flush()).unwrap();
+    let mut buffer: Vec<u8, 32> = Vec::new();
 
-    loop {}
+    loop {
+        // Start fresh
+        buffer.clear();
+        loop {
+            // We assume that the receiving cannot fail
+            let byte = nb::block!(serial.read()).unwrap();
+
+            if buffer.push(byte).is_err() {
+                write!(serial, "error: buffer full\r\n").unwrap();
+                break;
+            }
+
+            if byte == 13 {
+                for byte in &buffer {
+                    nb::block!(serial.write(*byte)).unwrap();
+                }
+                nb::block!(serial.flush()).unwrap();
+                break;
+            }
+        }
+    }
 }
